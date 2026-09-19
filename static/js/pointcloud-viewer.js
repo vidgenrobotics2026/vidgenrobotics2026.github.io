@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { taskPrompts } from './task-prompts.js';
 
 const ASSET_ROOT = './static/resources/pointcloud/';
 const gallery = document.querySelector('#pointcloud-gallery');
@@ -29,6 +30,8 @@ async function initialiseExplorer() {
   const canvas = gallery.querySelector('.shared-canvas');
   const canvasWrap = gallery.querySelector('.shared-canvas-wrap');
   const taskTitle = gallery.querySelector('.shared-task-title');
+  const taskPrompt = gallery.querySelector('.shared-task-prompt');
+  const taskPromptText = taskPrompt.querySelector('.generation-prompt-text');
   const taskButtons = [...gallery.querySelectorAll('.task-menu-button')];
   const playButton = gallery.querySelector('.canvas-play-button');
   const timeline = gallery.querySelector('.shared-timeline input');
@@ -153,6 +156,8 @@ async function initialiseExplorer() {
       else button.removeAttribute('aria-current');
     });
     taskTitle.textContent = example.label;
+    taskPromptText.textContent = taskPrompts[example.id] || '';
+    taskPrompt.hidden = !taskPromptText.textContent;
 
     try {
       const buffer = await fetchBuffer(example.data);
@@ -554,6 +559,7 @@ function buildInterface(examples) {
         <header class="shared-viewer-header">
           <h3 class="shared-task-title">${escapeHtml(examples[0].label)}</h3>
         </header>
+        <p class="shared-task-prompt"><strong class="generation-prompt-label">Generation prompt:</strong> <span class="generation-prompt-text">${escapeHtml(taskPrompts[examples[0].id] || '')}</span></p>
 
         <div class="shared-viewer-content">
           <figure class="shared-video-preview">
@@ -580,10 +586,10 @@ function buildInterface(examples) {
           <input type="range" min="0" max="0" value="0" step="1" aria-label="Trajectory frame" disabled>
         </div>
         <fieldset class="shared-layers" aria-label="Visualization layers">
-          <label><input type="checkbox" data-layer="scene" checked>Initial Observation</label>
-          <label><input type="checkbox" data-layer="video" checked>Generated motion</label>
-          <label><input type="checkbox" data-layer="tracks" checked>Object tracks</label>
-          <label><input type="checkbox" data-layer="meshes" checked>Object meshes</label>
+          <label><input type="checkbox" data-layer="scene" checked><span>Initial Observation</span></label>
+          <label><input type="checkbox" data-layer="video" checked><span>Generated motion</span></label>
+          <label><input type="checkbox" data-layer="tracks" checked><span>Object tracks</span></label>
+          <label><input type="checkbox" data-layer="meshes" checked><span>Object meshes</span></label>
         </fieldset>
         <p class="mesh-status" role="status" hidden></p>
         <div class="rollout-videos">
