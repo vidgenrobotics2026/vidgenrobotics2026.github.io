@@ -34,7 +34,6 @@ async function initialiseExplorer() {
   const timeline = gallery.querySelector('.shared-timeline input');
   const frameOutput = gallery.querySelector('.shared-timeline output');
   const loading = gallery.querySelector('.shared-loading');
-  const pointCount = gallery.querySelector('.shared-point-count');
   const video = gallery.querySelector('.shared-video-preview video');
   const layerInputs = [...gallery.querySelectorAll('.shared-layers input')];
 
@@ -53,7 +52,7 @@ async function initialiseExplorer() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-  const controls = new OrbitControls(camera, renderer.domElement);
+  let controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.075;
   controls.screenSpacePanning = true;
@@ -187,12 +186,9 @@ async function initialiseExplorer() {
       buildGroundReference(example.bounds);
       frameRange(example);
       applyLayerVisibility();
-      fitCamera(example.bounds);
+      fitCamera(example);
       setFrame(0, false);
 
-      const totalPoints = example.scene.pointCount + example.videoCloud.pointCount
-        + example.tracks.reduce((sum, track) => sum + track.pointCount, 0);
-      pointCount.textContent = `${totalPoints.toLocaleString()} points`;
       video.src = `${ASSET_ROOT}${example.video}`;
       video.load();
       setLoading(false);
@@ -366,22 +362,38 @@ async function initialiseExplorer() {
     content.add(axes);
   }
 
-  function fitCamera(bounds) {
+  function fitCamera(example) {
+    const bounds = example.bounds;
     const center = new THREE.Vector3(
       bounds.min[0] + bounds.extent[0] / 2,
       bounds.min[1] + bounds.extent[1] / 2,
       bounds.min[2] + bounds.extent[2] / 2,
     );
     const radius = Math.max(...bounds.extent);
-    controls.target.copy(center);
-    camera.position.set(
-      center.x + radius * 0.85,
-      center.y - radius * 1.05,
-      center.z + radius * 0.72,
-    );
+    controls.dispose();
+    let target = center;
+    if (example.camera) {
+      const matrix = example.camera.cameraToRobot;
+      camera.position.set(matrix[0][3], matrix[1][3], matrix[2][3]);
+      // OpenCV: +Z forward, +Y down. Three.js: -Z forward, +Y up.
+      const forward = new THREE.Vector3(matrix[0][2], matrix[1][2], matrix[2][2]).normalize();
+      camera.up.set(-matrix[0][1], -matrix[1][1], -matrix[2][1]).normalize();
+      const depth = Math.max(center.clone().sub(camera.position).dot(forward), radius * 0.25);
+      target = camera.position.clone().addScaledVector(forward, depth);
+    } else {
+      camera.up.set(0, 0, 1);
+      camera.position.set(center.x + radius * 0.85, center.y - radius * 1.05, center.z + radius * 0.72);
+    }
+    camera.lookAt(target);
+    // Recreate controls after changing the up axis, also clearing old damping.
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.075;
+    controls.screenSpacePanning = true;
+    controls.target.copy(target);
     camera.near = Math.max(radius / 1000, 0.002);
     camera.far = radius * 20;
-    camera.updateProjectionMatrix();
+    updateCameraProjection();
     controls.minDistance = radius * 0.18;
     controls.maxDistance = radius * 5;
     controls.update();
@@ -408,7 +420,26 @@ async function initialiseExplorer() {
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    updateCameraProjection();
+  }
+
+  function updateCameraProjection() {
+    const intrinsics = currentExample?.camera?.intrinsics;
+    if (!intrinsics) {
+      camera.fov = 44;
+      camera.updateProjectionMatrix();
+      return;
+    }
+    const { width, height, fx, fy, cx, cy } = intrinsics;
+    // Fit the calibrated image within any viewport shape without cropping it.
+    const viewHeight = Math.max(height, width / camera.aspect);
+    const viewWidth = viewHeight * camera.aspect;
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(viewHeight / (2 * fy)));
     camera.updateProjectionMatrix();
+    camera.projectionMatrix.elements[0] = 2 * fx / viewWidth;
+    camera.projectionMatrix.elements[8] = (width - 2 * cx) / viewWidth;
+    camera.projectionMatrix.elements[9] = (2 * cy - height) / viewHeight;
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
   }
 }
 
@@ -525,32 +556,31 @@ function buildInterface(examples) {
         </header>
 
         <div class="shared-viewer-content">
+          <figure class="shared-video-preview">
+            <div class="shared-video-wrap">
+              <video muted playsinline loop preload="metadata"></video>
+              <button class="canvas-play-button" type="button" aria-label="Play animation" title="Play animation" disabled>
+                <span class="play-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+            <figcaption>Generated video</figcaption>
+          </figure>
           <div class="shared-canvas-wrap">
             <canvas class="shared-canvas" aria-label="Interactive 3D point-cloud visualization"></canvas>
             <div class="shared-loading is-visible" role="status">
               <span class="viewer-spinner" aria-hidden="true"></span>
               <span>Loading point cloud&hellip;</span>
             </div>
-            <button class="canvas-play-button" type="button" aria-label="Play animation" title="Play animation" disabled>
-              <span class="play-icon" aria-hidden="true"></span>
-            </button>
             <span class="shared-viewer-hint">Drag to orbit &middot; Scroll to zoom</span>
-            <span class="shared-point-count"></span>
           </div>
-
-          <figure class="shared-video-preview">
-            <video muted playsinline loop preload="metadata"></video>
-            <figcaption>Generated video</figcaption>
-          </figure>
         </div>
 
         <div class="shared-timeline">
           <label><span>Trajectory frame</span><output>1 / 1</output></label>
           <input type="range" min="0" max="0" value="0" step="1" aria-label="Trajectory frame" disabled>
         </div>
-        <fieldset class="shared-layers">
-          <legend>Layers</legend>
-          <label><input type="checkbox" data-layer="scene" checked>Environment</label>
+        <fieldset class="shared-layers" aria-label="Visualization layers">
+          <label><input type="checkbox" data-layer="scene" checked>Initial Observation</label>
           <label><input type="checkbox" data-layer="video" checked>Generated motion</label>
           <label><input type="checkbox" data-layer="tracks" checked>Object tracks</label>
           <label><input type="checkbox" data-layer="meshes" checked>Object meshes</label>

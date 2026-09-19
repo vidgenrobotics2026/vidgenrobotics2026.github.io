@@ -274,6 +274,7 @@ def build_example(
         "data": data_name,
         "video": video_name,
         "bytes": len(bundle.data),
+        "camera": {"cameraToRobot": transform.tolist(), "intrinsics": intrinsics},
         "bounds": {"min": minimum.tolist(), "extent": extent.tolist()},
         "frameIndices": frame_indices.tolist(),
         "sourceFrameCount": int(len(depths)),

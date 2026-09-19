@@ -56,7 +56,7 @@
                   <span class="icon">
                     <i class="ai ai-arxiv" aria-hidden="true"></i>
                   </span>
-                  <span>arXiv</span>
+                  <span>arXiv (coming soon)</span>
                 </a>
               </span>
               <span class="link-block">
@@ -113,6 +113,22 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="section overview-section" aria-labelledby="overview-title">
+  <div class="container is-max-desktop">
+    <h2 id="overview-title" class="title is-2 has-text-centered">Overview</h2>
+    <figure class="overview-figure">
+      <img src="./static/resources/method.png" width="3392" height="1036"
+           loading="lazy" decoding="async"
+           alt="CASTER pipeline: synthetic video generation and digital twin reconstruction provide object trajectories for constrained optimization and real-robot execution.">
+      <figcaption class="content has-text-justified">
+        <p>
+          Overview of <strong class="caster-accent">CASTER</strong>. (Top Left) Given an initial RGB-D observation and a task prompt, we (Top) generate synthetic videos of a human performing that task in the current environment and (Bottom Left) build a digital twin of the scene. From the synthetic videos we extract the object trajectories, which then serve as initial guesses for trajectory optimization within the digital twin. (Bottom) The trajectories extracted from synthetic videos do not need to be perfect: instead, they must lie within a semantic basin of attraction where the optimization can locally modify the trajectory shape without removing its semantic meaning. (Bottom Right) We perform constrained optimization so that the robot&rsquo;s actions in the digital twin cause the objects to move similarly to their video trajectories, while enforcing kinematic constraints so that the output can be directly executed by the real robot.
+        </p>
+      </figcaption>
+    </figure>
   </div>
 </section>
 
