@@ -104,6 +104,16 @@ body {
   background: #fff;
 }
 
+.overview-section > .container {
+  margin-inline: auto;
+}
+
+#overview-title {
+  width: 100%;
+  margin-inline: auto;
+  text-align: center;
+}
+
 .overview-figure {
   margin: 2rem 0 0;
 }
