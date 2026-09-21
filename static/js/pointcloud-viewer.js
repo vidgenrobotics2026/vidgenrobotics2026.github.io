@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { taskPrompts } from './task-prompts.js';
+import { SimulationViewer } from './simulation-viewer.js';
 
 const ASSET_ROOT = './static/resources/pointcloud/';
 const gallery = document.querySelector('#pointcloud-gallery');
@@ -77,6 +78,10 @@ async function initialiseExplorer() {
   let axes = null;
   let playing = false;
   let lastDisplayedFrame = -1;
+  const simulation = new SimulationViewer(gallery.querySelector('.simulation-rollout'), () => {
+    video.pause();
+    setPlaying(false);
+  });
 
   const resizeObserver = new ResizeObserver(resizeRenderer);
   resizeObserver.observe(canvasWrap);
@@ -96,6 +101,7 @@ async function initialiseExplorer() {
       setFrame(0, true);
     }
     try {
+      simulation.pause();
       await video.play();
       setPlaying(true);
     } catch (error) {
@@ -158,6 +164,7 @@ async function initialiseExplorer() {
     taskTitle.textContent = example.label;
     taskPromptText.textContent = taskPrompts[example.id] || '';
     taskPrompt.hidden = !taskPromptText.textContent;
+    simulation.load(example.id, example.camera);
 
     try {
       const buffer = await fetchBuffer(example.data);
@@ -294,12 +301,14 @@ async function initialiseExplorer() {
     if (syncVideo) {
       const sourceFrame = currentExample.frameIndices[safeFrame];
       video.currentTime = sourceFrame / currentExample.sourceFps;
+      simulation.seekTaskFrame(sourceFrame);
     }
   }
 
   function render() {
     if (playing && currentExample && Number.isFinite(video.currentTime)) {
       const sourceFrame = video.currentTime * currentExample.sourceFps;
+      simulation.seekTaskFrame(sourceFrame);
       let closest = 0;
       let smallestDistance = Infinity;
       currentExample.frameIndices.forEach((frame, index) => {
@@ -593,10 +602,7 @@ function buildInterface(examples) {
         </fieldset>
         <p class="mesh-status" role="status" hidden></p>
         <div class="rollout-videos">
-          <figure class="rollout-placeholder">
-            <div class="rollout-empty"><span aria-hidden="true">▷</span><span>Coming soon</span></div>
-            <figcaption>Simulation rollout</figcaption>
-          </figure>
+          <figure class="simulation-rollout"></figure>
           <figure class="rollout-placeholder">
             <div class="rollout-empty"><span aria-hidden="true">▷</span><span>Coming soon</span></div>
             <figcaption>Real-world rollout</figcaption>
