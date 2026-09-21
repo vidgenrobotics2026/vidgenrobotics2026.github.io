@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const ROOT = './static/resources/simulation/';
+const DEFAULT_ROOT = './static/resources/simulation/';
 
 export class SimulationViewer {
-  constructor(element, onPlay) {
+  constructor(element, onPlay, options = {}) {
     this.element = element;
     this.onPlay = onPlay;
+    this.options = options;
+    this.assetRoot = options.assetRoot || DEFAULT_ROOT;
     this.sequence = 0;
     this.time = 0;
     this.playing = false;
@@ -25,7 +27,7 @@ export class SimulationViewer {
           <input type="range" min="0" step="0.001" value="0" aria-label="Simulation rollout time">
         </div>
       </div>
-      <figcaption>Simulation rollout</figcaption>`;
+      <figcaption>Optimized rollout in simulation</figcaption>`;
     this.player = element.querySelector('.simulation-player');
     this.placeholder = element.querySelector('.simulation-placeholder');
     this.stage = element.querySelector('.simulation-stage');
@@ -47,7 +49,7 @@ export class SimulationViewer {
     };
     this.slider.oninput = () => { this.onPlay(); this.pause(); this.seek(Number(this.slider.value)); };
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.pause(); });
-    this.manifest = fetch(`${ROOT}manifest.json`).then((r) => {
+    this.manifest = fetch(`${this.assetRoot}manifest.json`).then((r) => {
       if (!r.ok) throw new Error('Simulation manifest unavailable');
       return r.json();
     });
@@ -57,8 +59,12 @@ export class SimulationViewer {
 
   initialiseRenderer() {
     if (this.renderer) return;
-    this.renderer = new THREE.WebGLRenderer({ canvas:this.element.querySelector('canvas'), antialias:true });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    this.renderer = new THREE.WebGLRenderer({
+      canvas:this.element.querySelector('canvas'),
+      antialias:true,
+      preserveDrawingBuffer:Boolean(this.options.preserveDrawingBuffer),
+    });
+    this.renderer.setPixelRatio(this.options.pixelRatio ?? Math.min(devicePixelRatio, 1.5));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#e8ece8');
@@ -105,10 +111,10 @@ export class SimulationViewer {
     if (!path) return Promise.resolve([]);
     if (this.sharedPath === path && this.sharedPromise) return this.sharedPromise;
     this.sharedPath = path;
-    this.sharedPromise = fetch(ROOT + path).then(async (response) => {
+    this.sharedPromise = fetch(this.assetRoot + path).then(async (response) => {
       if (!response.ok) throw new Error('Shared robot metadata unavailable');
       const data = await response.json();
-      const binary = await fetch(ROOT + data.binary);
+      const binary = await fetch(this.assetRoot + data.binary);
       if (!binary.ok) throw new Error('Shared robot geometry unavailable');
       return this.makeMeshResources(data.meshes,await binary.arrayBuffer());
     });
@@ -117,6 +123,7 @@ export class SimulationViewer {
 
   async load(id, calibration) {
     const sequence = ++this.sequence;
+    this.lastError = null;
     this.pause();
     this.ready = false;
     this.clear();
@@ -128,11 +135,11 @@ export class SimulationViewer {
       if (sequence !== this.sequence) return;
       const rollouts = manifest.rollouts || manifest;
       if (!rollouts[id]) { this.placeholder.textContent = 'Coming soon'; return; }
-      const response = await fetch(ROOT + rollouts[id]);
+      const response = await fetch(this.assetRoot + rollouts[id]);
       if (!response.ok) throw new Error('Simulation metadata unavailable');
       const data = await response.json();
       const [binary,sharedResources] = await Promise.all([
-        fetch(ROOT + data.binary),
+        fetch(this.assetRoot + data.binary),
         this.loadShared(manifest.shared),
       ]);
       if (!binary.ok) throw new Error('Simulation geometry unavailable');
@@ -169,6 +176,7 @@ export class SimulationViewer {
     } catch (error) {
       if (sequence !== this.sequence) return;
       console.error(error);
+      this.lastError = error;
       this.ready = false;
       this.clear();
       this.player.hidden = true;

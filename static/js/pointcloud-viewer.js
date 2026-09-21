@@ -4,6 +4,8 @@ import { taskPrompts } from './task-prompts.js';
 import { SimulationViewer } from './simulation-viewer.js';
 
 const ASSET_ROOT = './static/resources/pointcloud/';
+const REAL_VIDEO_ROOT = './static/resources/real_videos/web/';
+const REAL_VIDEO_PLAYBACK_RATE = 2;
 const gallery = document.querySelector('#pointcloud-gallery');
 
 if (gallery) {
@@ -24,6 +26,9 @@ async function initialiseExplorer() {
   const meshManifest = await fetch(`${ASSET_ROOT}meshes/manifest.json`)
     .then((result) => result.ok ? result.json() : {})
     .catch(() => ({}));
+  const realVideoManifest = await fetch(`${REAL_VIDEO_ROOT}manifest.json`)
+    .then((result) => result.ok ? result.json() : {videos:{}})
+    .catch(() => ({videos:{}}));
   if (!manifest.examples?.length) throw new Error('The point-cloud manifest is empty.');
 
   gallery.innerHTML = buildInterface(manifest.examples);
@@ -34,11 +39,14 @@ async function initialiseExplorer() {
   const taskPrompt = gallery.querySelector('.shared-task-prompt');
   const taskPromptText = taskPrompt.querySelector('.generation-prompt-text');
   const taskButtons = [...gallery.querySelectorAll('.task-menu-button')];
-  const playButton = gallery.querySelector('.canvas-play-button');
+  const playButton = gallery.querySelector('.shared-video-wrap .canvas-play-button');
   const timeline = gallery.querySelector('.shared-timeline input');
   const frameOutput = gallery.querySelector('.shared-timeline output');
   const loading = gallery.querySelector('.shared-loading');
   const video = gallery.querySelector('.shared-video-preview video');
+  const realVideo = gallery.querySelector('.real-video-wrap video');
+  const realPlayButton = gallery.querySelector('.real-video-wrap .canvas-play-button');
+  const realPlaceholder = gallery.querySelector('.real-rollout .rollout-empty');
   const layerInputs = [...gallery.querySelectorAll('.shared-layers input')];
 
   const scene = new THREE.Scene();
@@ -80,6 +88,7 @@ async function initialiseExplorer() {
   let lastDisplayedFrame = -1;
   const simulation = new SimulationViewer(gallery.querySelector('.simulation-rollout'), () => {
     video.pause();
+    realVideo.pause();
     setPlaying(false);
   });
 
@@ -102,6 +111,7 @@ async function initialiseExplorer() {
     }
     try {
       simulation.pause();
+      realVideo.pause();
       await video.play();
       setPlaying(true);
     } catch (error) {
@@ -111,9 +121,39 @@ async function initialiseExplorer() {
 
   video.addEventListener('play', () => setPlaying(true));
   video.addEventListener('pause', () => setPlaying(false));
+  realPlayButton.addEventListener('click', async () => {
+    if (!realVideo.src) return;
+    if (!realVideo.paused) {
+      realVideo.pause();
+      return;
+    }
+    video.pause();
+    simulation.pause();
+    setPlaying(false);
+    try {
+      await realVideo.play();
+    } catch (error) {
+      console.warn('Real-world video playback was blocked:', error);
+    }
+  });
+  const setRealPlaying = (active) => {
+    realPlayButton.classList.toggle('is-playing',active);
+    const label = active ? 'Pause real-world rollout' : 'Play real-world rollout';
+    realPlayButton.setAttribute('aria-label',label);
+    realPlayButton.title = label;
+  };
+  realVideo.addEventListener('play',() => setRealPlaying(true));
+  realVideo.addEventListener('pause',() => setRealPlaying(false));
+  realVideo.addEventListener('ended',() => setRealPlaying(false));
+  realVideo.addEventListener('loadedmetadata',() => {
+    realVideo.defaultPlaybackRate = REAL_VIDEO_PLAYBACK_RATE;
+    realVideo.playbackRate = REAL_VIDEO_PLAYBACK_RATE;
+  });
 
   timeline.addEventListener('input', () => {
     video.pause();
+    realVideo.pause();
+    setRealPlaying(false);
     setPlaying(false);
     setFrame(Number(timeline.value), true);
   });
@@ -152,6 +192,8 @@ async function initialiseExplorer() {
     currentIndex = index;
     currentExample = example;
     video.pause();
+    realVideo.pause();
+    setRealPlaying(false);
     setPlaying(false);
     setLoading(true);
 
@@ -165,6 +207,19 @@ async function initialiseExplorer() {
     taskPromptText.textContent = taskPrompts[example.id] || '';
     taskPrompt.hidden = !taskPromptText.textContent;
     simulation.load(example.id, example.camera);
+    const realSource = realVideoManifest.videos?.[example.id];
+    realVideo.hidden = !realSource;
+    realPlayButton.hidden = !realSource;
+    realPlaceholder.hidden = Boolean(realSource);
+    if (realSource) {
+      realVideo.src = `${REAL_VIDEO_ROOT}${realSource}`;
+      realVideo.defaultPlaybackRate = REAL_VIDEO_PLAYBACK_RATE;
+      realVideo.playbackRate = REAL_VIDEO_PLAYBACK_RATE;
+      realVideo.load();
+    } else {
+      realVideo.removeAttribute('src');
+      realVideo.load();
+    }
 
     try {
       const buffer = await fetchBuffer(example.data);
@@ -603,8 +658,15 @@ function buildInterface(examples) {
         <p class="mesh-status" role="status" hidden></p>
         <div class="rollout-videos">
           <figure class="simulation-rollout"></figure>
-          <figure class="rollout-placeholder">
-            <div class="rollout-empty"><span aria-hidden="true">▷</span><span>Coming soon</span></div>
+          <figure class="real-rollout">
+            <div class="real-video-wrap">
+              <video muted playsinline loop preload="metadata" aria-label="Real-world robot rollout"></video>
+              <span class="real-video-speed" aria-label="Playback speed: two times">2×</span>
+              <button class="canvas-play-button" type="button" aria-label="Play real-world rollout" title="Play real-world rollout">
+                <span class="play-icon" aria-hidden="true"></span>
+              </button>
+              <div class="rollout-empty" hidden><span aria-hidden="true">▷</span><span>Coming soon</span></div>
+            </div>
             <figcaption>Real-world rollout</figcaption>
           </figure>
         </div>
