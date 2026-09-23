@@ -2,6 +2,15 @@ body {
   font-family: 'Noto Sans', sans-serif;
 }
 
+.footer .icon-link {
+  color: #000;
+  font-size: 25px;
+}
+
+.dnerf {
+  font-variant: small-caps;
+}
+
 .publication-title {
   font-family: 'Google Sans', sans-serif;
   font-size: 2.5rem;
@@ -131,6 +140,23 @@ body {
 
 .caster-accent {
   color: #ff9900;
+}
+
+.publication-video {
+  border-radius: 10px;
+  height: 0;
+  overflow: hidden;
+  padding-bottom: 56.25%;
+  position: relative;
+  width: 100%;
+}
+
+.publication-video iframe {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 .pointcloud-section > .container.is-max-desktop {

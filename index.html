@@ -22,7 +22,7 @@
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title publication-title">
+          <h1 class="title publication-ti\tle">
             <span class="caster-lockup">
               <span class="caster-wordmark-stack">
                 <span class="caster-echo caster-echo-3" aria-hidden="true">CASTER</span>
@@ -60,7 +60,7 @@
                 </a>
               </span>
               <span class="link-block">
-                <a href="#" aria-disabled="true" class="external-link button is-normal is-rounded is-dark is-placeholder">
+                <a href="https://youtu.be/1Ta4l1Fhoy4" target="_blank" rel="noopener noreferrer" class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                     <i class="fab fa-youtube" aria-hidden="true"></i>
                   </span>
@@ -107,8 +107,18 @@
           <h2 class="title is-3">Abstract</h2>
           <div class="content has-text-justified">
             <p>
-            Prior research on learning from humans often requires real human demonstrations. But advances in video generation models offer a new paradigm: we can now prompt these generators to make synthetic videos of the task. On the plus side, these synthetic videos take place in the robot&rsquo;s current environment and do not require actual human teaching. However, while the generated videos appear to show plausible motions, they lack both physical consistency and robot grounding, and thus the robot cannot directly roll out the trajectory shown by the video. In this paper, we seek to formalize the process of going from synthetic video generation to real-world robot trajectories for zero-shot manipulation tasks. We recognize that this problem is an instance of constrained optimization. The object trajectories extracted from the synthetic video provide an initial guess at the correct motion, and the robot must refine these trajectories (for instance, within a digital twin) while enforcing physical feasibility and semantic consistency. Our optimization-based formalism provides insights into the video generation properties necessary for success. Specifically, we show that the video generation must probabilistically seed the search within a semantic basin of attraction where the trajectory can be locally modified without losing its task alignment. Our analysis further reveals that state-of-the-art approaches can be viewed as instances of our unified formalism with key simplifications. In our experiments, we remove these simplifications to more closely match the underlying optimization, leading to more robust zero-shot trajectories from synthetic videos and improving average task success by 34.1% compared to the best-performing baseline.
+            Prior research on learning from humans often requires real human demonstrations. But advances in video generation models offer a new paradigm: we can now prompt these generators to make synthetic videos of the task. On the plus side, these synthetic videos take place in the robot&rsquo;s current environment and do not require actual human teaching. However, while the generated videos appear to show plausible motions, they lack both physical consistency and robot grounding, and thus the robot cannot directly roll out the trajectory shown by the video. In this paper, we seek to formalize the process of going from synthetic video generation to real-world robot trajectories for zero-shot manipulation tasks. We recognize that this problem is an instance of <b>constrained optimization</b>. The object trajectories extracted from the synthetic video provide an initial guess at the correct motion, and the robot must refine these trajectories (for instance, within a digital twin) while enforcing physical <b>feasibility and semantic consistency</b>. Our optimization-based formalism provides insights into the video generation properties necessary for success. Specifically, we show that the video generation must probabilistically seed the search within a semantic basin of attraction where the trajectory can be locally modified without losing its task alignment. Our analysis further reveals that state-of-the-art approaches can be viewed as instances of our unified formalism with key simplifications. In our experiments, we remove these simplifications to more closely match the underlying optimization, leading to more robust zero-shot trajectories from synthetic videos and improving average task success by 34.1% compared to the best-performing baseline.
             </p>
+          </div>
+        </div>
+      </div>
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-max-desktop">
+          <h2 class="title is-3">Video</h2>
+          <div class="publication-video">
+            <iframe src="https://www.youtube.com/embed/1Ta4l1Fhoy4" title="CASTER Video"
+              frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
           </div>
         </div>
       </div>
@@ -134,6 +144,7 @@
 
 <section class="section pointcloud-section" aria-label="Interactive task viewer">
   <div class="container is-max-desktop">
+    <h2 class="title is-2 has-text-centered">Experiments</h2>
     <div id="pointcloud-gallery" class="pointcloud-gallery" aria-live="polite">
       <div class="gallery-loading" role="status">
         <span class="viewer-spinner" aria-hidden="true"></span>
@@ -146,6 +157,20 @@
     </noscript>
   </div>
 </section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="./static/resources/ICRA_CASTER_2026.pdf" aria-label="Paper PDF">
+        <i class="fas fa-file-pdf" aria-hidden="true"></i>
+      </a>
+      <a class="icon-link" href="#" aria-disabled="true" title="Code coming soon" aria-label="Code coming soon">
+        <i class="fab fa-github" aria-hidden="true"></i>
+      </a>
+      <p>Page template borrowed from <a href="https://human2robot.github.io/"><span class="dnerf">Whirl</span></a>, <a href="https://nerfies.github.io"><span class="dnerf">Nerfies</span></a>, <a href="https://energy-locomotion.github.io/"><span class="dnerf">Energy Locomotion</span></a> and <a href="https://robotic-telekinesis.github.io/"><span class="dnerf">Robotic Telekinesis</span></a>.</p>
+    </div>
+  </div>
+</footer>
 
 <script type="importmap">
   {
