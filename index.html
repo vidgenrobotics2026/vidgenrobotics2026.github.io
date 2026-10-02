@@ -17,32 +17,36 @@
 </head>
 <body>
 
-<section class="hero">
+<section id="landing-hero" class="hero">
+  <video class="landing-background" autoplay loop muted playsinline preload="auto" aria-hidden="true">
+    <source src="./static/resources/intro-background.mp4" type="video/mp4">
+  </video>
   <div class="hero-body">
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title publication-ti\tle">
-            <span class="caster-lockup">
-              <span class="caster-wordmark-stack">
-                <span class="caster-echo caster-echo-3" aria-hidden="true">CASTER</span>
-                <span class="caster-echo caster-echo-2" aria-hidden="true">CASTER</span>
-                <span class="caster-echo caster-echo-1" aria-hidden="true">CASTER</span>
-                <span class="caster-wordmark">CASTER</span>
+          <div class="landing-title-panel">
+            <h1 class="title publication-ti\tle">
+              <span class="caster-lockup">
+                <span class="caster-wordmark-stack">
+                  <span class="caster-echo caster-echo-3" aria-hidden="true">CASTER</span>
+                  <span class="caster-echo caster-echo-2" aria-hidden="true">CASTER</span>
+                  <span class="caster-echo caster-echo-1" aria-hidden="true">CASTER</span>
+                  <span class="caster-wordmark">CASTER</span>
+                </span>
               </span>
-            </span>
-            <span class="publication-title-rest">
-              Formalizing Zero-Shot Manipulation<br>
-              from Synthetic Videos as Constrained Optimization
-            </span>
-          </h1>
+              <span class="publication-title-rest">
+                Formalizing Zero-Shot Manipulation<br>
+                from Synthetic Videos as Constrained Optimization
+              </span>
+            </h1>
 
-          <div class="is-size-5 publication-authors">
-            <span class="author-block">Anonymous Authors</span>
-          </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Anonymous Authors</span>
+            </div>
 
-          <div class="column has-text-centered">
-            <div class="publication-links">
+            <div class="column has-text-centered">
+              <div class="publication-links">
               <span class="link-block">
                 <a href="./static/resources/ICRA_CASTER_2026.pdf" class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
@@ -75,6 +79,7 @@
                   <span>Code</span>
                 </a>
               </span>
+              </div>
             </div>
           </div>
         </div>
@@ -126,13 +131,26 @@
   </div>
 </section>
 
-<section class="section overview-section" aria-labelledby="overview-title">
+<section class="section overview-section overview-intuition" aria-labelledby="overview-title">
   <div class="container is-max-desktop">
     <h2 id="overview-title" class="title is-2 has-text-centered">Overview</h2>
     <figure class="overview-figure">
-      <img src="./static/resources/method_web.png" width="3392" height="1036"
-           loading="lazy" decoding="async"
-           alt="CASTER pipeline: synthetic video generation and digital twin reconstruction provide object trajectories for constrained optimization and real-robot execution.">
+      <video class="overview-video" autoplay loop muted playsinline controls preload="metadata"
+             aria-label="CASTER intuition animation">
+        <source src="./static/resources/intuition.mp4" type="video/mp4">
+      </video>
+    </figure>
+  </div>
+</section>
+
+<section class="section overview-section" aria-labelledby="method-title">
+  <div class="container is-max-desktop">
+    <h2 id="method-title" class="title is-2 has-text-centered">Method</h2>
+    <figure class="overview-figure">
+      <video class="overview-video" autoplay loop muted playsinline controls preload="metadata"
+             aria-label="CASTER architecture overview animation">
+        <source src="./static/resources/architecture.mp4" type="video/mp4">
+      </video>
       <figcaption class="content has-text-justified">
         <p>
           Overview of <strong class="caster-accent">CASTER</strong>. (Top Left) Given an initial RGB-D observation and a task prompt, we (Top) generate synthetic videos of a human performing that task in the current environment and (Bottom Left) build a digital twin of the scene. From the synthetic videos we extract the object trajectories, which then serve as initial guesses for trajectory optimization within the digital twin. (Bottom) The trajectories extracted from synthetic videos do not need to be perfect: instead, they must lie within a semantic basin of attraction where the optimization can locally modify the trajectory shape without removing its semantic meaning. (Bottom Right) We perform constrained optimization so that the robot&rsquo;s actions in the digital twin cause the objects to move similarly to their video trajectories, while enforcing kinematic constraints so that the output can be directly executed by the real robot.

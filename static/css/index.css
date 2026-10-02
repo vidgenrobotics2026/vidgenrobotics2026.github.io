@@ -2,6 +2,79 @@ body {
   font-family: 'Noto Sans', sans-serif;
 }
 
+body.landing-active {
+  overflow: hidden;
+}
+
+#landing-hero {
+  min-height: 0;
+  position: relative;
+  transition: min-height 800ms cubic-bezier(.22, .8, .2, 1);
+}
+
+.landing-background {
+  display: none;
+}
+
+.landing-title-panel {
+  transition: background-color 550ms ease, border-color 550ms ease, box-shadow 550ms ease, backdrop-filter 550ms ease, padding 550ms ease;
+}
+
+body.landing-active #landing-hero {
+  min-height: 100svh;
+  overflow: hidden;
+}
+
+body.landing-transition #landing-hero {
+  min-height: 0;
+  overflow: hidden;
+}
+
+body.landing-active .landing-background,
+body.landing-transition .landing-background {
+  display: block;
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  opacity: .46;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 700ms ease;
+  width: 100%;
+}
+
+body.landing-transition .landing-background {
+  opacity: 0;
+}
+
+body.landing-active #landing-hero .hero-body,
+body.landing-transition #landing-hero .hero-body {
+  align-items: center;
+  display: flex;
+  position: relative;
+  z-index: 1;
+}
+
+body.landing-active .landing-title-panel,
+body.landing-transition .landing-title-panel {
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  background: rgba(255, 255, 255, .34);
+  border: 1px solid rgba(255, 255, 255, .56);
+  border-radius: 28px;
+  box-shadow: 0 20px 60px rgba(45, 34, 20, .17), inset 0 1px rgba(255, 255, 255, .42);
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+body.landing-transition .landing-title-panel {
+  background: rgba(255, 255, 255, 0);
+  border-color: rgba(255, 255, 255, 0);
+  box-shadow: none;
+  padding: 0;
+  -webkit-backdrop-filter: blur(0);
+  backdrop-filter: blur(0);
+}
+
 .footer .icon-link {
   color: #000;
   font-size: 25px;
@@ -118,7 +191,15 @@ body {
   margin-inline: auto;
 }
 
-#overview-title {
+.overview-intuition {
+  padding-bottom: 1.5rem;
+}
+
+.overview-section + .overview-section {
+  padding-top: 1.5rem;
+}
+
+.overview-section .title {
   width: 100%;
   margin-inline: auto;
   text-align: center;
@@ -128,10 +209,13 @@ body {
   margin: 2rem 0 0;
 }
 
-.overview-figure img {
+.overview-figure img,
+.overview-video {
   display: block;
   width: 100%;
   height: auto;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .overview-figure figcaption {
