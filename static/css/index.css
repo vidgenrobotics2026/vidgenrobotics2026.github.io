@@ -236,7 +236,7 @@ body.landing-transition .landing-title-panel {
   width: 100%;
 }
 
-.publication-video iframe {
+.publication-video video {
   height: 100%;
   left: 0;
   position: absolute;

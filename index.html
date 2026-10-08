@@ -121,9 +121,9 @@
         <div class="column is-max-desktop">
           <h2 class="title is-3">Video</h2>
           <div class="publication-video">
-            <iframe src="https://www.youtube.com/embed/1Ta4l1Fhoy4" title="CASTER Video"
-              frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen></iframe>
+            <video autoplay loop muted controls playsinline preload="metadata" aria-label="CASTER Video">
+              <source src="./static/resources/CASTER_vi.mp4" type="video/mp4">
+            </video>
           </div>
         </div>
       </div>
@@ -139,6 +139,10 @@
              aria-label="CASTER intuition animation">
         <source src="./static/resources/intuition.mp4" type="video/mp4">
       </video>
+      <figcaption class="content has-text-justified">
+        <p><strong>Beyond tracking a <span class="caster-accent">single trajectory</span>, video generation models allow us to sample <span class="caster-accent">multiple videos</span> and learn the essential task features they share.</strong></p>
+        <p>Synthetic videos need not be physically perfect. <strong class="caster-accent">CASTER</strong> uses them to seed a search for feasible robot motions that preserve the intended task.</p>
+      </figcaption>
     </figure>
   </div>
 </section>
