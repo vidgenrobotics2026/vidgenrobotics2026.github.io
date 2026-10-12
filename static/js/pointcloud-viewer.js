@@ -672,7 +672,7 @@ function buildInterface(examples) {
           <input type="range" min="0" max="0" value="0" step="1" aria-label="Trajectory frame" disabled>
         </div>
         <fieldset class="shared-layers" aria-label="Visualization layers">
-          <label><input type="checkbox" data-layer="scene" checked><span>Initial Observation</span></label>
+          <label><input type="checkbox" data-layer="scene"><span>Initial Observation</span></label>
           <label><input type="checkbox" data-layer="video" checked><span>Generated motion</span></label>
           <label><input type="checkbox" data-layer="tracks" checked><span>Object tracks</span></label>
           <label><input type="checkbox" data-layer="meshes" checked><span>Object meshes</span></label>
