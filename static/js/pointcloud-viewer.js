@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { taskPrompts } from './task-prompts.js';
 import { SimulationViewer } from './simulation-viewer.js';
+import { RawPointCloud } from './raw-pointcloud.js';
 
 const ASSET_ROOT = './static/resources/pointcloud/';
 const REAL_VIDEO_ROOT = './static/resources/real_videos/web/';
@@ -80,6 +81,7 @@ async function initialiseExplorer() {
   let videoCloud = null;
   let videoPositions = null;
   let videoColors = null;
+  let rawCloud = null;
   let trackClouds = [];
   let meshes = [];
   let grid = null;
@@ -231,19 +233,27 @@ async function initialiseExplorer() {
 
       const scenePositions = decodePositions(buffer, example.scene.position, example.scene.pointCount, minimum, extent);
       const sceneColors = byteView(buffer, example.scene.color, example.scene.pointCount * 3);
-      sceneCloud = buildPoints(scenePositions, sceneColors, 0.0135, 0.82);
+      sceneCloud = buildPoints(scenePositions, sceneColors, example.videoCloud.depthChunks ? 0.003 : 0.0135, 0.82);
       sceneCloud.name = 'scene';
       content.add(sceneCloud);
 
       const frameCount = example.videoCloud.frameCount;
       const videoPointCount = example.videoCloud.pointCount;
-      videoPositions = decodePositions(buffer, example.videoCloud.position, frameCount * videoPointCount, minimum, extent);
-      videoColors = byteView(buffer, example.videoCloud.color, frameCount * videoPointCount * 3);
-      videoCloud = buildPoints(
-        new Float32Array(videoPointCount * 3),
-        new Uint8Array(videoPointCount * 3),
-        0.018,
-      );
+      if (example.videoCloud.depthChunks) {
+        rawCloud = new RawPointCloud(example, video, ASSET_ROOT, (error) => console.warn(error));
+        rawCloud.resize(renderer);
+        videoCloud = rawCloud.object;
+        await rawCloud.setFrame(0);
+        if (sequence !== loadSequence) return;
+      } else {
+        videoPositions = decodePositions(buffer, example.videoCloud.position, frameCount * videoPointCount, minimum, extent);
+        videoColors = byteView(buffer, example.videoCloud.color, frameCount * videoPointCount * 3);
+        videoCloud = buildPoints(
+          new Float32Array(videoPointCount * 3),
+          new Uint8Array(videoPointCount * 3),
+          0.018,
+        );
+      }
       videoCloud.name = 'video';
       content.add(videoCloud);
 
@@ -331,15 +341,21 @@ async function initialiseExplorer() {
     const frameCount = currentExample.videoCloud.frameCount;
     const safeFrame = THREE.MathUtils.clamp(Math.round(frame), 0, frameCount - 1);
     const videoPointCount = currentExample.videoCloud.pointCount;
-    const videoStart = safeFrame * videoPointCount * 3;
-    videoCloud.geometry.attributes.position.array.set(
-      videoPositions.subarray(videoStart, videoStart + videoPointCount * 3),
-    );
-    videoCloud.geometry.attributes.color.array.set(
-      videoColors.subarray(videoStart, videoStart + videoPointCount * 3),
-    );
-    videoCloud.geometry.attributes.position.needsUpdate = true;
-    videoCloud.geometry.attributes.color.needsUpdate = true;
+    if (rawCloud) {
+      rawCloud.setFrame(safeFrame).catch((error) => {
+        if (error.name !== 'AbortError') console.warn(error);
+      });
+    } else {
+      const videoStart = safeFrame * videoPointCount * 3;
+      videoCloud.geometry.attributes.position.array.set(
+        videoPositions.subarray(videoStart, videoStart + videoPointCount * 3),
+      );
+      videoCloud.geometry.attributes.color.array.set(
+        videoColors.subarray(videoStart, videoStart + videoPointCount * 3),
+      );
+      videoCloud.geometry.attributes.position.needsUpdate = true;
+      videoCloud.geometry.attributes.color.needsUpdate = true;
+    }
 
     trackClouds.forEach((object) => {
       const count = object.userData.pointCount;
@@ -469,6 +485,10 @@ async function initialiseExplorer() {
   }
 
   function clearContent() {
+    rawCloud?.dispose();
+    rawCloud = null;
+    videoPositions = null;
+    videoColors = null;
     for (const child of [...content.children]) {
       content.remove(child);
       child.geometry?.dispose();
@@ -488,6 +508,7 @@ async function initialiseExplorer() {
     const height = canvasWrap.clientHeight;
     if (!width || !height) return;
     renderer.setSize(width, height, false);
+    rawCloud?.resize(renderer);
     camera.aspect = width / height;
     updateCameraProjection();
   }
@@ -595,6 +616,7 @@ function buildTrackTrails(example, buffer) {
 }
 
 function decodePositions(buffer, descriptor, pointCount, minimum, extent) {
+  if (descriptor.dtype === 'float32') return new Float32Array(buffer, descriptor.offset, pointCount * 3);
   const quantized = new Uint16Array(buffer, descriptor.offset, pointCount * 3);
   const decoded = new Float32Array(pointCount * 3);
   for (let index = 0; index < decoded.length; index += 3) {
